@@ -23,10 +23,10 @@ var ArticleSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Note"
   },
-  summary: { 
-    type: String,
-    required: true
-  }
+  // summary: { 
+  //   type: String,
+  //   required: true
+  // }
 
 });
 
