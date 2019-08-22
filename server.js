@@ -12,7 +12,7 @@ var cheerio = require("cheerio");
 // Require all models
 var db = require("./models");
 
-var PORT = 4000;
+var PORT = process.env.PORT || 4000;
 
 // Initialize Express
 var app = express();
@@ -37,7 +37,6 @@ app.use(express.static("public"));
 
 var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/foxScrape";
 mongoose.connect(MONGODB_URI, {useNewUrlParser: true});
-// mongoose.connect("mongodb://localhost/unit18Populater", { useNewUrlParser: true });
 
 // Routes
 
@@ -135,5 +134,5 @@ app.get("/", function(req, res){
 
 // Start the server
 app.listen(PORT, function() {
-  console.log("App running on http://localhost:" + PORT);
+  console.log("App running on http://localhost:" + PORT );
 });
