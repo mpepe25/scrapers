@@ -1,9 +1,12 @@
+<form action="/scrape" method="get">
+  <input type="submit" value="Scrape" class="btn btn-default" />
+</form>
+
 <div id="wrapper">
   <h1>Note Scraper</h1>
   <div id="articles">
     {{#each article}}
-     <p data-id= "{{_id}}">{{title}}</p>
-    <p data-id= "{{_id}}"></p>>{{link}}</p>
+    {{> articles/articles-card}}
     {{/each}}
-</div>
-<div id="notes"></div>
+  </div>
+  <div id="notes"></div>

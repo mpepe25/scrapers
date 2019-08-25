@@ -1,0 +1,17 @@
+<div>
+    <p data-id="{{_id}}">{{title}}</p>
+    <a href="https://www.foxnews.com{{link}}">Link</a>
+
+    <form action="/my-article/{{id}}" method="GET">
+    <input type="submit" value="Leave Comment" />
+    </form>
+
+    {{#each note}}
+    <h4>{{title}}</h4>
+    <p>{{body}}</p>
+    
+    <form action="/deletenote/{{_id}}/{{../id}}" method="POST">
+    <input type="submit" value="Delete">
+    </form>
+    {{/each}}
+</div>

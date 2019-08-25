@@ -1,4 +1,4 @@
-// get all the require 
+// get all the require
 var express = require("express");
 var logger = require("morgan");
 var mongoose = require("mongoose");
@@ -18,25 +18,24 @@ var PORT = process.env.PORT || 4000;
 var app = express();
 
 //Set Handlebars.
-var exphbs = require('express-handlebars');
+var exphbs = require("express-handlebars");
 
-app.engine('handlebars', exphbs({ defaultLayout: 'main' }));
-app.set('view engine', 'handlebars');
+app.engine("handlebars", exphbs({ defaultLayout: "main" }));
+app.set("view engine", "handlebars");
 // Configure middleware
-
 
 // Use morgan logger for logging requests
 app.use(logger("dev"));
 // Parse request body as JSON
+app.use(express.static("public"));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 // Make public a static folder
-app.use(express.static("public"));
 
 // Connect to the Mongo DB
 
 var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/foxScrape";
-mongoose.connect(MONGODB_URI, {useNewUrlParser: true});
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
 
 // Routes
 
@@ -60,79 +59,80 @@ app.get("/scrape", function(req, res) {
         .children("a")
         .attr("href");
 
-      // Create a new Article using the `result` object built from scraping
-      db.Article.create(result)
-        .then(function(dbArticle) {
-          // View the added result in the console
-          console.log(dbArticle);
-        })
-        .catch(function(err) {
-          // If an error occurred, log it
-          console.log(err);
-        });
+      if (!result.link.includes("http")) {
+        // Create a new Article using the `result` object built from scraping
+        db.Article.create(result)
+          .then(function(dbArticle) {
+            // View the added result in the console
+            console.log(dbArticle);
+          })
+          .catch(function(err) {
+            // If an error occurred, log it
+            console.log(err);
+          });
+      }
     });
 
     // Send a message to the client
-    res.send("Scrape Complete");
+    // res.send("Scrape Complete");
+    res.redirect("/");
   });
 });
-app.get("/articles", function(req, res) {
-  // Grab every document in the Articles collection
-  db.Article.find({})
-    .then(function(dbArticle) {
-      // If we were able to successfully find Articles, send them back to the client
-      res.json(dbArticle);
-    })
-    .catch(function(err) {
-      // If an error occurred, send it to the client
-      res.json(err);
-    });
-});
 
-app.get("/articles/:id", function(req, res) {
-  // Using the id passed in the id parameter, prepare a query that finds the matching one in our db...
-  db.Article.findOne({ _id: req.params.id })
-    // ..and populate all of the notes associated with it
-    .populate("note")
-    .then(function(dbArticle) {
-      // If we were able to successfully find an Article with the given id, send it back to the client
-      res.json(dbArticle);
-    })
-    .catch(function(err) {
-      // If an error occurred, send it to the client
-      res.json(err);
-    });
-});
 
 // Route for saving/updating an Article's associated Note
 app.post("/articles/:id", function(req, res) {
-  db.Note.create(req.body)
-    .then(function(dbNote) {
-     return db.Article.findOneAndUpdate({ _id: req.params.id }, { note: dbNote._id }, { new: true });
-    })
+  console.log(req.body);
+  try {
+    db.Note.create(req.body).then(function(dbResult) {
+      db.Article.findByIdAndUpdate(req.params.id, {
+        $push: { note: dbResult._id },
+        new: true
+      }).then(function(finalResult) {
+        res.redirect("/");
+      });
+    });
+  } catch (error) {
+    console.log("WE HAVE AN ERROR", error);
+  }
+});
+
+app.post("/deletenote/:noteId/:articleId", function(req, res) {
+  db.Note.findByIdAndRemove(req.params.noteId).then(function(dbResult) {
+    db.Article.findByIdAndUpdate(req.params.articleId, {
+      $pull: { note: req.params.noteId },
+      new: true
+    }).then(function(final){
+      res.redirect("/")
+    });
+  });
+});
+
+app.get("/", function(req, res) {
+  db.Article.find({})
+    .populate("note")
     .then(function(dbArticle) {
-      // If we were able to successfully update an Article, send it back to the client
-      res.json(dbArticle);
+      console.log(dbArticle);
+      var hbsObject = {
+        article: dbArticle
+      };
+      res.render("index", hbsObject);
     })
     .catch(function(err) {
-      // If an error occurred, send it to the client
       res.json(err);
     });
 });
 
-app.get("/", function(req, res){
-  db.Article.find({}).then(function(dbArticle){
-    console.log(dbArticle)
-    var hbsObject = {
-      article: dbArticle
-    }
-    res.render("index",hbsObject)
-  }).catch(function(err){
-    res.json(err);
-  })
-})
+app.get("/my-article/:id", function(req, res) {
+  var id = req.params.id;
 
+  db.Article.findById(id)
+    .populate("Note")
+    .then(function(dbArticle) {
+      res.render("my-article", dbArticle);
+    });
+});
 // Start the server
 app.listen(PORT, function() {
-  console.log("App running on http://localhost:" + PORT );
+  console.log("App running on http://localhost:" + PORT);
 });

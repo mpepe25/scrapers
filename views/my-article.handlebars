@@ -1,0 +1,11 @@
+<h1>{{title}}</h1>
+
+<form action="/articles/{{id}}" method="POST">
+    Title: <input type="text" name="title" /><br />
+    Body: <input type="text" name="body" /><br />
+    <input type="submit" value="New Note" />
+</form>
+
+<form action="/" method="GET">
+    <input type="submit" value="Home" />
+</form>
